@@ -12,45 +12,24 @@ A minimal, public GitHub Pages gaming-year recap. It combines Steam library/achi
 - **Optional ThunderSkill link:** set your public nickname to open a 2026 date-comparison page. ThunderSkill only has historical snapshots where its tracker captured them.
 - Public JSON import/export, responsive design, and automatic GitHub Pages deployment.
 
-## 1. Set up the Steam collector (Windows)
+## 1. Get your Steam data (Windows — no Python)
 
-Requirements: Python 3.10+ and a Steam Web API key.
+The collector runs in the Windows PowerShell already included with Windows. You do not need to install Python, pip, or any modules.
 
-1. Create your API key at <https://steamcommunity.com/dev/apikey>.
-2. Set Steam **Game details** privacy to Public: <https://steamcommunity.com/my/edit/settings>.
-3. Clone this repository and open its folder:
+1. Set **Game details** to Public in Steam privacy settings: <https://steamcommunity.com/my/edit/settings>.
+2. Create a Steam Web API key: <https://steamcommunity.com/dev/apikey>.
+3. Press **Win + R**, paste the command shown in the website's **Setup** menu, and press Enter. It downloads and runs the PowerShell collector.
+4. Paste your Steam API key into the PowerShell window. The collector detects the currently logged-in Steam account when possible; otherwise it asks for your SteamID64 or profile URL.
 
-```powershell
-git clone https://github.com/zerryH/steam-wrapped-2026.git
-cd steam-wrapped-2026
-```
+It reads Steam's local session logs and scans your Steam library, achievement timestamps, and available player counters. The API key is used only by the local script; it is not written into the JSON export.
 
-4. Create `.env`:
+The file is saved to:
 
-```powershell
-Copy-Item .env.example .env
-notepad .env
-```
+Downloads\SteamWrapped2026\wrapped.json
 
-5. Fill in `STEAM_API_KEY`, `STEAM_ID` (17-digit SteamID64 or vanity name), and optionally `THUNDERSKILL_NICKNAME`.
-6. Run:
+The script opens that folder and the Wrapped site when complete. On the site, press **Import** and select wrapped.json.
 
-```powershell
-python scripts/collect.py
-```
-
-The script auto-detects common Steam log locations. To point it at a custom installation:
-
-```powershell
-python scripts/collect.py --log-dir "D:\Steam\logs"
-```
-
-The script reads all available matching files:
-- `controller_ui*.txt` / `controller_ui*.log`
-- `compat_log*.txt` / `compat_log*.log`
-- `gameprocess_log*.txt` / `gameprocess_log*.log`
-
-The highest-priority app lifecycle log is preferred; compatibility/process logs are fallbacks to avoid counting the same play session more than once.
+You can also download the standalone [PowerShell collector](https://raw.githubusercontent.com/zerryH/steam-wrapped-2026/main/scripts/collect.ps1) directly.
 
 ## 2. Publish your personal 2026 data
 
@@ -90,14 +69,7 @@ Steam's `GetOwnedGames` exposes cumulative lifetime playtime and a rolling two-w
 
 ## 5. Configuration
 
-`.env.example` supports:
-- `STEAM_API_KEY`
-- `STEAM_ID`
-- `WRAPPED_YEAR` (defaults to 2026)
-- `DEEP_STATS_LIMIT` (default -1; scan all games for Steam-native player counters. Set 0 to disable or a positive number to limit to the top N.)
-- `ACHIEVEMENT_SCAN_LIMIT` (default -1; scans every detected game. Set a positive number to limit the scan.)
-- `STEAM_LOG_DIR` (optional custom Steam logs folder)
-- `THUNDERSKILL_NICKNAME` (optional public tracker profile)
+The Windows PowerShell collector uses defaults and does not require a .env file. It detects the Steam installation and logged-in account automatically when possible. The legacy Python collector remains available for developers who already use Python; normal Windows setup does not need it.
 
 ## Privacy
 
@@ -105,3 +77,4 @@ Steam's `GetOwnedGames` exposes cumulative lifetime playtime and a rolling two-w
 - Your local Steam logs are read on your computer and are not copied into the public dataset. The exported JSON contains daily/monthly aggregates, never raw session start/end times or full local file paths.
 - The repository and Pages site are public. Review `public/data/wrapped.json` before pushing it.
 - Do not publish raw Steam logs; they can contain device/account activity beyond what the Wrapped needs.
+

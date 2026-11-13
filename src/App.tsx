@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { AchievementEvent, Game, WrappedData } from './lib/types';
 
 const DATA_URL = import.meta.env.BASE_URL + 'data/wrapped.json';
+const RUN_COMMAND = "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; $p=Join-Path $env:TEMP 'SteamWrapped.ps1'; Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/zerryH/steam-wrapped-2026/main/scripts/collect.ps1' -OutFile $p; & $p\"";
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function fmt(value: number) {
@@ -141,6 +142,15 @@ export default function App() {
     }
   }
 
+  async function copyRunCommand() {
+    try {
+      await navigator.clipboard.writeText(RUN_COMMAND);
+      setNotice('Run command copied.');
+    } catch {
+      setNotice('Clipboard unavailable. Use Download script instead.');
+    }
+  }
+
   if (!data) return <div className="loading-screen"><p>{loadError || 'Loading…'}</p></div>;
 
   const setup = data.source === 'setup';
@@ -150,7 +160,20 @@ export default function App() {
       <a className="wordmark" href="#top">STEAM WRAPPED <span className="wordmark-year">{data.year}</span></a>
       <div className="header-actions">
         <button className="text-button" onClick={() => fileRef.current?.click()}>Import</button>
-        <button className="text-button" onClick={downloadData}>Export</button>
+        {!setup && <button className="text-button" onClick={downloadData}>Export</button>}
+        <details className="data-menu">
+          <summary>Setup</summary>
+          <div className="data-menu-panel">
+            <a className="data-download" href="https://raw.githubusercontent.com/zerryH/steam-wrapped-2026/main/scripts/collect.ps1" download="SteamWrapped.ps1">Download PowerShell script</a>
+            <div className="run-command">
+              <span>Win + R command</span>
+              <code>{RUN_COMMAND}</code>
+              <button className="text-button" onClick={() => void copyRunCommand()}>Copy command</button>
+            </div>
+            <a className="api-key-link" href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noreferrer">Steam Web API key</a>
+            <p>Uses Windows PowerShell already on your PC. Steam account is auto-detected when possible. The key is only used locally and is not saved to the export. Set Game Details to Public.</p>
+          </div>
+        </details>
       </div>
       <input ref={fileRef} hidden type="file" accept="application/json,.json" onChange={(event) => void importData(event.target.files?.[0])}/>
     </header>
@@ -168,10 +191,8 @@ export default function App() {
 
     {setup ? <section className="setup-panel">
       <div className="setup-copy">
-        <h2>No data imported</h2>
-        <p>Run the collector on your Steam PC, then import <code>wrapped.json</code>.</p>
-        <pre><code>Copy-Item .env.example .env{'\n'}notepad .env{'\n'}python scripts/collect.py</code></pre>
-        <a className="setup-link" href="https://github.com/zerryH/steam-wrapped-2026#1-set-up-the-steam-collector-windows" target="_blank" rel="noreferrer">Setup instructions</a>
+        <h2>No data</h2>
+        <button className="text-button" onClick={() => fileRef.current?.click()}>Import JSON</button>
       </div>
     </section> : <>
       <section className="stats-grid" aria-label="Year statistics">
@@ -292,4 +313,5 @@ export default function App() {
     {notice && <div className="toast" role="status">{notice}<button onClick={() => setNotice('')} aria-label="Dismiss">×</button></div>}
   </main>;
 }
+
 
