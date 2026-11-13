@@ -31,6 +31,7 @@ jobs:
         run: |
           python -m py_compile scripts/collect.py
           python -m json.tool public/data/wrapped.json > /dev/null
+          python -m unittest discover -s tests -v
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
