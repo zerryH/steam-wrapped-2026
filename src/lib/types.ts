@@ -62,6 +62,9 @@ export type WrappedData = {
     yearHoursExact: number | null;
     yearSessions: number;
     yearActiveDays: number;
+    averageHoursPerActiveDay: number | null;
+    continuousDaysEquivalent: number;
+    eightHourDaysEquivalent: number;
     sessionActiveDays: number;
     achievementActiveDays: number;
     activeGames2026: number;
@@ -89,7 +92,6 @@ export type WrappedData = {
     daily: { date: string; minutes: number }[];
     weekdayHours: { day: string; hours: number }[];
     achievements: AchievementEvent[];
-    sessions: { appId: number; start: string; end: string; seconds: number; source: string }[];
   };
   topSessionGameAppId: number | null;
   thunderSkill?: { nickname: string; profileUrl: string; yearCompareUrl: string } | null;

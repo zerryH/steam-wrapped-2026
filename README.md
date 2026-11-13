@@ -95,13 +95,13 @@ Steam's `GetOwnedGames` exposes cumulative lifetime playtime and a rolling two-w
 - `STEAM_ID`
 - `WRAPPED_YEAR` (defaults to 2026)
 - `DEEP_STATS_LIMIT` (default 40)
-- `ACHIEVEMENT_SCAN_LIMIT` (default 200; set -1 to scan every game)
+- `ACHIEVEMENT_SCAN_LIMIT` (default -1; scans every detected game. Set a positive number to limit the scan.)
 - `STEAM_LOG_DIR` (optional custom Steam logs folder)
 - `THUNDERSKILL_NICKNAME` (optional public tracker profile)
 
 ## Privacy
 
 - Never commit `.env`, API keys or local log files.
-- Your local Steam logs are read on your computer and are not copied into the public dataset; only aggregate session totals and activity days are published.
+- Your local Steam logs are read on your computer and are not copied into the public dataset. The exported JSON contains daily/monthly aggregates, never raw session start/end times or full local file paths.
 - The repository and Pages site are public. Review `public/data/wrapped.json` before pushing it.
 - Do not publish raw Steam logs; they can contain device/account activity beyond what the Wrapped needs.

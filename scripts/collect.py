@@ -232,7 +232,7 @@ def collect_local_sessions(year: int) -> tuple[list[dict[str, Any]], list[str]]:
         paired.extend(selected)
         covered_app_ids.update(s["appId"] for s in selected)
 
-    file_names = [str(path) for path in unique_files]
+    file_names = [path.name for path in unique_files]
     return paired, file_names
 
 
@@ -316,8 +316,8 @@ def split_sessions_by_day(sessions: list[dict[str, Any]], year: int) -> dict[str
         "longestSessionSeconds": longest,
         "weekdayHours": ordered_weekdays,
         "mostPlayedWeekday": best_weekday["day"] if best_weekday and best_weekday["hours"] > 0 else None,
-        "firstSession": earliest,
-        "lastSession": latest,
+        "firstSession": earliest[:10] if earliest else None,
+        "lastSession": latest[:10] if latest else None,
         "gameTotals": {
             str(app_id): {
                 "hours": round(info["hours"], 2),
@@ -419,7 +419,7 @@ def main() -> int:
     parser.add_argument("--year", type=int, default=int(os.getenv("WRAPPED_YEAR", "2026")))
     parser.add_argument("--deep-limit", type=int, default=int(os.getenv("DEEP_STATS_LIMIT", "40")),
                         help="Fetch Steam player stats for the top N lifetime games; 0 disables it.")
-    parser.add_argument("--achievement-limit", type=int, default=int(os.getenv("ACHIEVEMENT_SCAN_LIMIT", "200")),
+    parser.add_argument("--achievement-limit", type=int, default=int(os.getenv("ACHIEVEMENT_SCAN_LIMIT", "-1")),
                         help="Scan unlock-time history for the top N lifetime games; -1 scans all games.")
     parser.add_argument("--log-dir", default=os.getenv("STEAM_LOG_DIR", ""),
                         help="Optional Steam logs directory; normally auto-detected.")
@@ -579,6 +579,9 @@ def main() -> int:
                 "yearHoursExact": activity["totalHours"] if activity["totalSessions"] else None,
                 "yearSessions": activity["totalSessions"],
                 "yearActiveDays": len(combined_active_days),
+                "averageHoursPerActiveDay": round(activity["totalHours"] / activity["activeDays"], 2) if activity["activeDays"] else None,
+                "continuousDaysEquivalent": round(activity["totalHours"] / 24, 2),
+                "eightHourDaysEquivalent": round(activity["totalHours"] / 8, 2),
                 "sessionActiveDays": activity["activeDays"],
                 "achievementActiveDays": len(achievement_days),
                 "activeGames2026": len(active_game_ids),
@@ -609,8 +612,7 @@ def main() -> int:
                 "daily": activity["daily"],
                 "weekdayHours": activity["weekdayHours"],
                 "achievements": all_achievement_events,
-                "sessions": activity["sessions"],
-            },
+                            },
             "topSessionGameAppId": top_session_game["appId"] if top_session_game else None,
             "thunderSkill": thunderskill,
             "games": games,
