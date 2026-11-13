@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { makeBanter, BANter_VARIANTS_PER_SLIDE } from './data/banter';
+import { makeBanter } from './data/banter';
 import { trackProgress } from './lib/history';
 import type { ProgressResult, ReplayData, SteamGame } from './lib/types';
 
@@ -359,6 +359,7 @@ export default function App() {
   const [error, setError] = useState('');
   const [showSearch, setShowSearch] = useState(true);
   const [slideIndex, setSlideIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState<'forward' | 'back'>('forward');
 
   const slides = useMemo(
     () => data && progress ? buildSlides(data, progress) : [],
@@ -379,6 +380,7 @@ export default function App() {
       setData(result);
       setProgress(progressResult);
       setSlideIndex(0);
+      setSlideDirection('forward');
       setShowSearch(false);
       setProfileInput(profileUrl);
     } catch (cause) {
@@ -393,15 +395,18 @@ export default function App() {
     setData(null);
     setProgress(null);
     setSlideIndex(0);
+    setSlideDirection('forward');
     setError('');
   }
 
   function goNext() {
+    setSlideDirection('forward');
     setSlideIndex((current) => Math.min(current + 1, slides.length - 1));
   }
 
   function goBack() {
-    setSlideIndex((current) => Math.max(0, current - 1));
+    setSlideDirection('back');
+    setSlideIndex((current) => Math.max(current - 1, 0));
   }
 
   useEffect(() => {
@@ -409,10 +414,12 @@ export default function App() {
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'ArrowRight' || event.key === ' ') {
         event.preventDefault();
+        setSlideDirection('forward');
         setSlideIndex((current) => Math.min(current + 1, slides.length - 1));
       }
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
+        setSlideDirection('back');
         setSlideIndex((current) => Math.max(current - 1, 0));
       }
     }
@@ -489,7 +496,7 @@ export default function App() {
             <span style={{ width: ((slideIndex + 1) / slides.length * 100) + '%' }} />
           </div>
 
-          <article className="story-slide" key={slide.key + '-' + slideIndex}>
+          <article className={'story-slide ' + (slideDirection === 'back' ? 'is-back' : 'is-forward')} key={slide.key + '-' + slideIndex}>
             <div className="slide-glow" />
             <div className="slide-content">
               <p className="eyebrow">{slide.eyebrow}</p>
@@ -520,14 +527,14 @@ export default function App() {
                   key={item.key}
                   type="button"
                   className={index === slideIndex ? 'story-dot active' : 'story-dot'}
-                  onClick={() => setSlideIndex(index)}
+                  onClick={() => { setSlideDirection(index < slideIndex ? 'back' : 'forward'); setSlideIndex(index); }}
                   aria-label={'Go to slide ' + (index + 1)}
                   aria-current={index === slideIndex ? 'step' : undefined}
                 />
               ))}
             </div>
             {slideIndex === slides.length - 1 ? (
-              <button className="next-button" type="button" onClick={() => setSlideIndex(0)}>
+              <button className="next-button" type="button" onClick={() => { setSlideDirection('back'); setSlideIndex(0); }}>
                 Replay wrap <span aria-hidden="true">↻</span>
               </button>
             ) : (
@@ -536,15 +543,9 @@ export default function App() {
               </button>
             )}
           </div>
-          <p className="story-key-hint">USE ← → TO MOVE THROUGH THE STORY</p>
         </section>
       ) : null}
 
-      <footer className="site-footer">
-        <span>STEAM WRAPPED 2026</span>
-        <span>{formatNumber(BANter_VARIANTS_PER_SLIDE)}+ possible banter combinations per slide</span>
-        <span>Progress history stays in this browser</span>
-      </footer>
     </main>
   );
 }
