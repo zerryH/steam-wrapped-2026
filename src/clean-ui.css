@@ -1,0 +1,5 @@
+/* Keep the player focused on the story, not implementation details. */
+.site-footer,
+.story-key-hint {
+  display: none !important;
+}
