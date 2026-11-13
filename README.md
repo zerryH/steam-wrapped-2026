@@ -32,6 +32,12 @@ The site reads a public Steam lookup endpoint through the Jina Reader relay. The
 
 Steam Game Details must be visible to the public. Private game libraries cannot be read.
 
+## Automatic game artwork
+
+Game images come from the current public Steam Store app-details feed: the publisher's current header art and full-size store screenshots, not old user-customized Steam library covers. The site rechecks the image URLs every 12 hours in each browser, so publisher changes appear automatically without a monthly site update. Requests use the public Store endpoint through a CORS relay; only Steam App IDs are sent for artwork. No Steam login or API key is used.
+
+Steam screenshots are served at the best size the publisher has uploaded (often 1920×1080). 4K is used only when the Store actually supplies it. Delisted games or games without public Store media can have no current artwork.
+
 ## Run locally
 
 \`npm install\`, then \`npm run dev\`. Build with \`npm run build\`.

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { makeBanter } from './data/banter';
 import { trackProgress } from './lib/history';
+import { fetchSteamStoreArtBatch, type SteamStoreArt } from './lib/storeMedia';
 import type { ProgressResult, ReplayData, SteamGame } from './lib/types';
 
 type StoryRow = {
@@ -149,6 +150,13 @@ function getPlayerType(gamesOwned: number, mainShare: number, gameCount: number)
   return 'The regular';
 }
 
+function personalLine(profileId: string, slideId: string, facts: string): string {
+  const [first, ...rest] = makeBanter(profileId, slideId, facts).split('. ');
+  const second = rest.join('. ').replace(/[.!?]+$/, '');
+  if (!second) return first;
+  return first.replace(/[.!?]+$/, '') + ' — ' + second.charAt(0).toLowerCase() + second.slice(1) + '.';
+}
+
 function buildSlides(data: ReplayData, progress: ProgressResult): StorySlide[] {
   const games = cleanGames(data.topTitles);
   const recent = cleanGames(data.recentTop).slice(0, 4);
@@ -189,7 +197,7 @@ function buildSlides(data: ReplayData, progress: ProgressResult): StorySlide[] {
       title: 'Your profile',
       big: data.profile.personaName || 'Player',
       unit: (createdYear ? 'Member since ' + createdYear : 'Steam player') + ' · ' + formatNumber(data.gamesOwned) + ' games',
-      comment: makeBanter(id, 'hello', String(data.gamesOwned) + ':' + formatHours(data.totalHours)),
+      comment: personalLine(id, 'hello', String(data.gamesOwned) + ':' + formatHours(data.totalHours)),
       artwork: games.slice(0, 4),
     },
     {
@@ -197,7 +205,7 @@ function buildSlides(data: ReplayData, progress: ProgressResult): StorySlide[] {
       title: 'Most played',
       big: main ? formatHours(main.hours) + ' h' : '—',
       unit: main ? main.name : 'No public game data',
-      comment: makeBanter(id, 'main', main ? main.appid + ':' + formatHours(main.hours) : 'empty'),
+      comment: personalLine(id, 'main', main ? main.appid + ':' + formatHours(main.hours) : 'empty'),
       heroGame: main,
     },
     {
@@ -205,7 +213,7 @@ function buildSlides(data: ReplayData, progress: ProgressResult): StorySlide[] {
       title: 'Player type',
       big: playerType,
       unit: main ? mainShare + '% of your top-game hours · ' + main.name : 'Based on your public game list',
-      comment: makeBanter(id, 'type', playerType + ':' + mainShare),
+      comment: personalLine(id, 'type', playerType + ':' + mainShare),
       artwork: games.slice(0, 3),
     },
     {
@@ -213,15 +221,16 @@ function buildSlides(data: ReplayData, progress: ProgressResult): StorySlide[] {
       title: 'Most-played games',
       big: formatHours(topHours) + ' h',
       unit: 'across your top ' + formatNumber(games.length),
-      comment: makeBanter(id, 'ranking', games.map((game) => game.appid).join(':')),
+      comment: personalLine(id, 'ranking', games.map((game) => game.appid).join(':')),
       rows: rows(games),
+      artwork: games.slice(0, 4),
     },
     {
       key: 'milestones',
       title: 'Next milestone',
       big: main ? formatHours(remaining) + ' h' : '—',
       unit: main ? 'to ' + formatNumber(next) + ' h · ' + main.name : 'No top game',
-      comment: makeBanter(id, 'milestones', main ? main.appid + ':' + next + ':' + formatHours(main.hours) : 'empty'),
+      comment: personalLine(id, 'milestones', main ? main.appid + ':' + next + ':' + formatHours(main.hours) : 'empty'),
       rows: milestoneRows,
       heroGame: main,
     },
@@ -230,7 +239,7 @@ function buildSlides(data: ReplayData, progress: ProgressResult): StorySlide[] {
       title: 'Your library',
       big: formatNumber(data.gamesOwned),
       unit: 'games owned',
-      comment: makeBanter(id, 'shelf', String(data.gamesOwned)),
+      comment: personalLine(id, 'shelf', String(data.gamesOwned)),
       artwork: games.slice(0, 6),
     },
     {
@@ -238,7 +247,7 @@ function buildSlides(data: ReplayData, progress: ProgressResult): StorySlide[] {
       title: 'Recently played',
       big: recentHoursValid ? formatHours(data.recentHours) + ' h' : formatNumber(data.recentGamesPlayed),
       unit: recentHoursValid ? 'last 14 days' : 'recent games',
-      comment: makeBanter(id, 'recent', recent.map((game) => game.appid).join(':') + ':' + data.recentGamesPlayed),
+      comment: personalLine(id, 'recent', recent.map((game) => game.appid).join(':') + ':' + data.recentGamesPlayed),
       rows: recent.map((game) => ({ appid: game.appid, label: game.name, value: 'Recent' })),
       artwork: recent,
     },
@@ -247,7 +256,7 @@ function buildSlides(data: ReplayData, progress: ProgressResult): StorySlide[] {
       title: 'Since last visit',
       big: progress.first ? 'New' : progress.totalGain !== null ? '+' + formatHours(progress.totalGain) + ' h' : '—',
       unit: progress.first ? 'baseline' : 'tracked playtime',
-      comment: makeBanter(id, 'progress', String(progress.totalGain) + ':' + progress.changes.map((game) => game.appid).join(':')),
+      comment: personalLine(id, 'progress', String(progress.totalGain) + ':' + progress.changes.map((game) => game.appid).join(':')),
       rows: changedRows,
       artwork: progress.changes.length
         ? progress.changes.slice(0, 4).map((game) => ({ appid: game.appid, name: game.name, hours: game.addedHours }))
@@ -258,49 +267,54 @@ function buildSlides(data: ReplayData, progress: ProgressResult): StorySlide[] {
       title: 'That’s a wrap',
       big: formatNumber(data.gamesOwned),
       unit: 'games · ' + formatHours(data.totalHours) + ' lifetime hours',
-      comment: makeBanter(id, 'outro', String(data.totalHours) + ':' + data.profile.personaName),
+      comment: personalLine(id, 'outro', String(data.totalHours) + ':' + data.profile.personaName),
       heroGame: main,
     },
   ];
 }
 
-function GameArt({ game, variant = 'poster' }: {
+function GameArt({ game, storeArt, variant = 'poster' }: {
   game: SteamGame;
+  storeArt: Record<number, SteamStoreArt>;
   variant?: 'hero' | 'poster' | 'row';
 }) {
-  const [sourceIndex, setSourceIndex] = useState(0);
+  const [useHeader, setUseHeader] = useState(variant === 'row');
   const [failed, setFailed] = useState(false);
-  const id = game.appid;
-  const base = 'https://shared.steamstatic.com/store_item_assets/steam/apps/' + id + '/';
-  const sources = variant === 'hero'
-    ? [base + 'library_hero_2x.jpg', base + 'library_hero.jpg', 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/' + id + '/library_hero.jpg', base + 'header.jpg', 'https://cdn.akamai.steamstatic.com/steam/apps/' + id + '/header.jpg']
-    : variant === 'poster'
-      ? [base + 'library_600x900_2x.jpg', base + 'library_600x900.jpg', base + 'header.jpg', 'https://cdn.akamai.steamstatic.com/steam/apps/' + id + '/header.jpg']
-      : [base + 'header.jpg', 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/' + id + '/header.jpg', 'https://cdn.akamai.steamstatic.com/steam/apps/' + id + '/header.jpg'];
+  const media = storeArt[game.appid];
+  const screenshots = media?.screenshots || [];
+  const image = variant === 'row'
+    ? media?.headerImage || screenshots[0]
+    : !useHeader && screenshots.length
+      ? screenshots[0]
+      : media?.headerImage || screenshots[0];
 
-  if (failed || !id) return <span className="art-fallback" aria-hidden="true" />;
+  if (failed || !image) return <span className="art-fallback" aria-hidden="true" />;
   return (
     <img
-      src={sources[sourceIndex]}
+      src={image}
       alt={game.name}
       loading={variant === 'hero' ? 'eager' : 'lazy'}
       decoding="async"
+      fetchPriority={variant === 'hero' ? 'high' : 'auto'}
       onError={() => {
-        if (sourceIndex < sources.length - 1) setSourceIndex((current) => current + 1);
+        if (!useHeader && media?.headerImage && image !== media.headerImage) setUseHeader(true);
         else setFailed(true);
       }}
     />
   );
 }
 
-function GameRows({ rows }: { rows: StoryRow[] }) {
+function GameRows({ rows, storeArt }: {
+  rows: StoryRow[];
+  storeArt: Record<number, SteamStoreArt>;
+}) {
   if (!rows.length) return null;
   return (
     <div className="story-rows">
       {rows.map((row) => (
         <div className="story-row" key={row.appid + ':' + row.label}>
           <div className="row-art">
-            <GameArt game={{ appid: row.appid, name: row.label, hours: 0 }} variant="row" />
+            <GameArt game={{ appid: row.appid, name: row.label, hours: 0 }} storeArt={storeArt} variant="row" />
           </div>
           <span className="row-name">{row.label}</span>
           <strong className="row-value">{row.value}</strong>
@@ -323,6 +337,22 @@ export default function App() {
   const [showSearch, setShowSearch] = useState(true);
   const [slideIndex, setSlideIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState<'forward' | 'back'>('forward');
+  const [storeArt, setStoreArt] = useState<Record<number, SteamStoreArt>>({});
+
+  useEffect(() => {
+    if (!data) {
+      setStoreArt({});
+      return;
+    }
+    let active = true;
+    const games = [...data.topTitles, ...data.recentTop];
+    void fetchSteamStoreArtBatch(games, (appid, art) => {
+      if (active) setStoreArt((current) => ({ ...current, [appid]: art }));
+    });
+    return () => {
+      active = false;
+    };
+  }, [data]);
 
   const slides = useMemo(
     () => data && progress ? buildSlides(data, progress) : [],
@@ -340,6 +370,7 @@ export default function App() {
       const result = await lookupSteamProfile(profileUrl);
       const progressResult = trackProgress(result);
       setData(result);
+      setStoreArt({});
       setProgress(progressResult);
       setSlideIndex(0);
       setShowSearch(false);
@@ -354,6 +385,7 @@ export default function App() {
   function startNewProfile() {
     setShowSearch(true);
     setData(null);
+    setStoreArt({});
     setProgress(null);
     setSlideIndex(0);
     setError('');
@@ -443,17 +475,17 @@ export default function App() {
             data-slide={slide.key}
             key={slide.key + '-' + slideIndex}
           >
-            <div className="slide-backdrop">
+            <div className="slide-backdrop" style={{ viewTransitionName: "story-visual" }}>
               {slide.heroGame && (
                 <div className="slide-hero-art" key={'hero-' + slide.heroGame.appid}>
-                  <GameArt game={slide.heroGame} variant="hero" />
+                  <GameArt game={slide.heroGame} storeArt={storeArt} variant="hero" />
                 </div>
               )}
               {slide.artwork && slide.artwork.length > 0 && (
                 <div className={'artwork-mosaic mosaic-' + slide.key}>
                   {slide.artwork.slice(0, 6).map((game) => (
                     <div className="art-card" key={game.appid}>
-                      <GameArt game={game} variant="poster" />
+                      <GameArt game={game} storeArt={storeArt} variant="poster" />
                     </div>
                   ))}
                 </div>
@@ -461,12 +493,12 @@ export default function App() {
             </div>
 
             <div className="slide-content">
-              <h1>{slide.title}</h1>
+              <h1 style={{ viewTransitionName: "story-title" }}>{slide.title}</h1>
               <div className="slide-stat-block">
-                <div className="slide-stat">{slide.big}</div>
-                <div className="slide-unit">{slide.unit}</div>
+                <div className={"slide-stat" + (slide.big.length > 14 ? " is-long" : "")} style={{ viewTransitionName: "story-stat" }}>{slide.big}</div>
+                <div className="slide-unit" style={{ viewTransitionName: "story-unit" }}>{slide.unit}</div>
               </div>
-              {slide.rows && <GameRows rows={slide.rows} />}
+              {slide.rows && <GameRows rows={slide.rows} storeArt={storeArt} />}
               <p className="slide-comment">{slide.comment}</p>
             </div>
           </article>
