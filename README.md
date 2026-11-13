@@ -1,86 +1,107 @@
 # Steam Wrapped 2026
 
-A minimal, public, GitHub Pages year-in-gaming recap built with React + Vite. It detects every game returned by Steam's owned-games API and can enrich the most-played games with whatever achievements/player stats their developers expose through Steam.
+A minimal, public GitHub Pages gaming-year recap. It combines Steam library/achievement data with locally reconstructed Steam sessions to build an actual **January–current-month 2026** timeline.
 
-## What's included
+## What is different in the final version
 
-- Responsive, minimal editorial-style Wrapped page.
-- Automatic full-library discovery via Steam Web API.
-- Lifetime playtime and two-week playtime from Steam.
-- Optional per-game achievement and player-stat scan.
-- Local playtime snapshots so the site never mislabels lifetime hours as 2026 hours.
-- Import/export of the public Wrapped JSON.
-- GitHub Actions deployment to GitHub Pages.
+- **Historical session reconstruction:** reads the local Steam `controller_ui`, `compat_log`, and `gameprocess_log` files, including rotated/previous files, and pairs app start/exit timestamps.
+- **Achievement chronology:** reads each achievement's Steam `unlocktime` timestamp and plots unlocks in the month they happened.
+- **Honest precision:** exact session hours are reported only from paired local log entries. Achievement events show activity, but are not converted into fake playtime.
+- **Whole Steam library:** lists every game Steam returns, with lifetime hours, recent two-week hours, 2026 log-derived hours, sessions, achievements and whatever current player stats Steam exposes.
+- **2026 story:** monthly activity, active days, session count, average and longest session, busiest month, busiest weekday, first/last tracked session, most active games.
+- **Optional ThunderSkill link:** set your public nickname to open a 2026 date-comparison page. ThunderSkill only has historical snapshots where its tracker captured them.
+- Public JSON import/export, responsive design, and automatic GitHub Pages deployment.
 
-## 1. Configure the collector
+## 1. Set up the Steam collector (Windows)
 
 Requirements: Python 3.10+ and a Steam Web API key.
 
-1. Create a personal key at <https://steamcommunity.com/dev/apikey>.
-2. Set your Steam **Game details** privacy to Public: <https://steamcommunity.com/my/edit/settings>.
-3. Copy `.env.example` to `.env`.
-4. Fill in `STEAM_API_KEY` and `STEAM_ID`. Use your 17-digit SteamID64 or your vanity profile name.
+1. Create your API key at <https://steamcommunity.com/dev/apikey>.
+2. Set Steam **Game details** privacy to Public: <https://steamcommunity.com/my/edit/settings>.
+3. Clone this repository and open its folder:
 
-PowerShell:
+```powershell
+git clone https://github.com/zerryH/steam-wrapped-2026.git
+cd steam-wrapped-2026
+```
+
+4. Create `.env`:
 
 ```powershell
 Copy-Item .env.example .env
 notepad .env
-python scripts/collect.py --deep-limit 30
 ```
 
-macOS / Linux:
+5. Fill in `STEAM_API_KEY`, `STEAM_ID` (17-digit SteamID64 or vanity name), and optionally `THUNDERSKILL_NICKNAME`.
+6. Run:
 
-```bash
-cp .env.example .env
-nano .env
-python3 scripts/collect.py --deep-limit 30
+```powershell
+python scripts/collect.py
 ```
 
-`--deep-limit 30` scans the top 30 games for achievements and game-defined player stats. All detected games are still included in the library, even when deep scan is disabled or unsupported. Set `--deep-limit 0` to skip those extra API calls.
+The script auto-detects common Steam log locations. To point it at a custom installation:
 
-## 2. Publish your personal Wrapped
+```powershell
+python scripts/collect.py --log-dir "D:\Steam\logs"
+```
 
-The collector writes `public/data/wrapped.json`. Review it before publishing: the site is public, so this JSON exposes your Steam profile name, profile URL, game library, and playtime. Your API key and local tracking history are not included.
+The script reads all available matching files:
+- `controller_ui*.txt` / `controller_ui*.log`
+- `compat_log*.txt` / `compat_log*.log`
+- `gameprocess_log*.txt` / `gameprocess_log*.log`
 
-```bash
+The highest-priority app lifecycle log is preferred; compatibility/process logs are fallbacks to avoid counting the same play session more than once.
+
+## 2. Publish your personal 2026 data
+
+The collector writes `public/data/wrapped.json`. Inspect it before publication: the public page includes your Steam display name/profile URL, library, lifetime playtime and 2026 statistics.
+
+```powershell
 git add public/data/wrapped.json
-git commit -m "Publish my Steam Wrapped data"
+git commit -m "Publish my 2026 Steam Wrapped"
 git push
 ```
 
-GitHub Actions builds the site and deploys it to Pages. The local `private/playtime-history.json` file is deliberately ignored by Git; keep it on your own computer and back it up if you want continuity in yearly tracking.
+GitHub Actions builds and deploys the site automatically.
 
 ## 3. Run locally
 
-```bash
+```powershell
 npm install
 npm run dev
 ```
 
 Build check:
 
-```bash
+```powershell
 npm run build
 ```
 
-## 4. How yearly playtime works
+## 4. What can and cannot be reconstructed
 
-Steam's owned-games endpoint exposes **lifetime** minutes and a rolling two-week value, not an exact calendar-year playtime history. This project stores a private baseline on the first collector run and compares later lifetime readings against it. For that reason, a first run made during 2026 starts tracking from that date; it cannot reconstruct earlier months unless you already have an earlier local snapshot. The site labels the coverage start date and only claims full-year coverage if the baseline was captured on January 1.
+Steam's `GetOwnedGames` exposes cumulative lifetime playtime and a rolling two-week number; it does not provide a retroactive calendar-year timeline. That is why the project reads local client session logs for timestamped playtime and uses Steam achievement unlock timestamps for a separate event timeline.
 
-## 5. Game-specific stats
+- A paired local start/exit event gives measured session duration.
+- An achievement unlock timestamp is an exact dated event, not evidence of a specific number of hours.
+- Steam logs can rotate, be deleted on reinstall, or cover only one device. Missing data creates gaps; the dashboard does not extrapolate or fill gaps with invented hours.
+- If there are no usable session logs, the 2026 playtime tile says it is unavailable while the achievement timeline still shows verifiable progress.
+- Steam player stats are game-defined. Kills/deaths or other values appear only if a game actually exposes those counters.
+- ThunderSkill comparisons depend on its archived profile snapshots. The website links to the exact 2026 date range but cannot manufacture tracker snapshots that do not exist.
 
-Steam's `GetUserStatsForGame` and `GetPlayerAchievements` responses are game-defined and frequently unavailable. The collector therefore records only values Steam actually returns. It does not pretend all games have a universal kills/deaths/assists schema. Rich match-level integrations (for example, competitive CS2 trackers or War Thunder tracker data) are future adapter modules and are not part of this first Steam-only implementation.
+## 5. Configuration
 
-## API references
+`.env.example` supports:
+- `STEAM_API_KEY`
+- `STEAM_ID`
+- `WRAPPED_YEAR` (defaults to 2026)
+- `DEEP_STATS_LIMIT` (default 40)
+- `ACHIEVEMENT_SCAN_LIMIT` (default 200; set -1 to scan every game)
+- `STEAM_LOG_DIR` (optional custom Steam logs folder)
+- `THUNDERSKILL_NICKNAME` (optional public tracker profile)
 
-- [Steam IPlayerService / GetOwnedGames](https://partner.steamgames.com/doc/webapi/iplayerservice)
-- [Steam ISteamUser / GetPlayerSummaries](https://partner.steamgames.com/doc/webapi/ISteamUser)
-- [Steam ISteamUserStats](https://partner.steamgames.com/doc/webapi/ISteamUserStats)
+## Privacy
 
-## Privacy and security
-
-- Never commit `.env` or your Steam Web API key.
-- Never commit `private/playtime-history.json` unless you explicitly choose to back it up in a private location.
-- The repository and Pages site are public. Only publish `public/data/wrapped.json` after reviewing its contents.
-- This project is a static site; it does not send your Steam key to the browser.
+- Never commit `.env`, API keys or local log files.
+- Your local Steam logs are read on your computer and are not copied into the public dataset; only aggregate session totals and activity days are published.
+- The repository and Pages site are public. Review `public/data/wrapped.json` before pushing it.
+- Do not publish raw Steam logs; they can contain device/account activity beyond what the Wrapped needs.
