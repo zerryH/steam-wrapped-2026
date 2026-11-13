@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-13T12:00:00+02:00",
+  "year": 2026,
+  "source": "demo",
+  "profile": {
+    "steamId": "76561198000000000",
+    "name": "Your Steam profile",
+    "avatar": "",
+    "url": "https://steamcommunity.com/"
+  },
+  "summary": {
+    "totalGames": 8,
+    "lifetimeHours": 2146,
+    "trackedYearHours": 0,
+    "achievementUnlocked": 124,
+    "achievementTotal": 742
+  },
+  "tracking": {
+    "coverageStart": "2026-11-13T12:00:00+02:00",
+    "coverageEnd": "2026-11-13T12:00:00+02:00",
+    "isFullYear": false,
+    "note": "Demo values only. The local collector will replace this with Steam data."
+  },
+  "games": [
+    { "appId": 730, "name": "Counter-Strike 2", "playtimeForeverHours": 842, "playtime2WeeksHours": 8.2, "trackedYearHours": 0, "iconUrl": "https://media.steampowered.com/steamcommunity/public/images/apps/730/69f7ebe2735c366c65c0b33dae00e12dc40edbe4.jpg", "achievements": { "unlocked": 14, "total": 34, "percent": 41 }, "statsAvailable": true, "stats": [{ "name": "total_kills", "displayName": "Total kills", "value": 18542 }, { "name": "total_deaths", "displayName": "Total deaths", "value": 17211 }, { "name": "total_wins", "displayName": "Total wins", "value": 503 }] },
+    { "appId": 236390, "name": "War Thunder", "playtimeForeverHours": 617, "playtime2WeeksHours": 4.6, "trackedYearHours": 0, "achievements": null, "statsAvailable": false, "stats": [] },
+    { "appId": 271590, "name": "Grand Theft Auto V", "playtimeForeverHours": 284, "playtime2WeeksHours": 0, "trackedYearHours": 0, "achievements": { "unlocked": 47, "total": 77, "percent": 61 }, "statsAvailable": true, "stats": [] },
+    { "appId": 1086940, "name": "Baldur\u0027s Gate 3", "playtimeForeverHours": 126, "playtime2WeeksHours": 0, "trackedYearHours": 0, "achievements": { "unlocked": 32, "total": 54, "percent": 59 }, "statsAvailable": true, "stats": [] },
+    { "appId": 252490, "name": "Rust", "playtimeForeverHours": 98, "playtime2WeeksHours": 0, "trackedYearHours": 0, "achievements": null, "statsAvailable": false, "stats": [] },
+    { "appId": 1091500, "name": "Cyberpunk 2077", "playtimeForeverHours": 76, "playtime2WeeksHours": 0, "trackedYearHours": 0, "achievements": { "unlocked": 19, "total": 57, "percent": 33 }, "statsAvailable": true, "stats": [] },
+    { "appId": 440, "name": "Team Fortress 2", "playtimeForeverHours": 61, "playtime2WeeksHours": 0, "trackedYearHours": 0, "achievements": { "unlocked": 12, "total": 520, "percent": 2 }, "statsAvailable": true, "stats": [] },
+    { "appId": 570, "name": "Dota 2", "playtimeForeverHours": 42, "playtime2WeeksHours": 0, "trackedYearHours": 0, "achievements": null, "statsAvailable": false, "stats": [] }
+  ]
+}
