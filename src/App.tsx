@@ -260,7 +260,7 @@ export default function App() {
             })}
           </div>
           <div className="timeline-footnote">{hasSessionHistory
-            ? 'Bars show the duration of paired Steam sessions in each month. ' + (data.summary.busiestMonth ? data.summary.busiestMonth + ' was your biggest month in the recovered logs.' : 'No month total is available yet.')
+            ? 'Bars show the duration of paired Steam sessions in each month. ' + (data.summary.busiestMonth ? data.summary.busiestMonth + ' was your biggest month in the recovered logs. ' : '') + (data.yearToDate.endMonth < 12 ? MONTHS[data.yearToDate.endMonth - 1] + ' is month-to-date.' : 'The full calendar year is included.')
             : 'This is an activity chronology, not an hour estimate. Unlocks are timestamped by Steam; missing achievements or logs can leave gaps.'}</div>
         </div>
       </section>
@@ -284,6 +284,14 @@ export default function App() {
           <article className="insight-card"><span className="section-kicker">AVERAGE SESSION</span><strong>{hasSessionHistory ? duration((data.summary.averageSessionMinutes ?? 0) * 60) : '—'}</strong><p>{hasSessionHistory ? 'Average length of paired local sessions.' : 'Calculated only from complete start / exit pairs.'}</p></article>
           <article className="insight-card"><span className="section-kicker">LONGEST SESSION</span><strong>{hasSessionHistory ? duration(data.summary.longestSessionSeconds) : '—'}</strong><p>{hasSessionHistory ? 'Longest single session found in your logs.' : 'No verified session duration available.'}</p></article>
         </div>
+        {hasSessionHistory && <div className="time-perspective">
+          <span className="section-kicker">TIME, PUT INTO PERSPECTIVE</span>
+          <div className="perspective-grid">
+            <article><strong>{data.summary.continuousDaysEquivalent.toFixed(1)} days</strong><span>Non-stop, around the clock</span><p>All your recovered 2026 session hours, played back continuously.</p></article>
+            <article><strong>{data.summary.eightHourDaysEquivalent.toFixed(1)} days</strong><span>Eight-hour days</span><p>The same time expressed as full eight-hour days.</p></article>
+            <article><strong>{data.summary.averageHoursPerActiveDay?.toFixed(1) ?? '—'} h</strong><span>Per active day</span><p>Your average measured playtime on days with a recorded session.</p></article>
+          </div>
+        </div>}
       </section>
 
       <section className="feature-section">
