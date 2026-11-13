@@ -71,6 +71,8 @@ export type WrappedData = {
     achievementUnlocked2026: number;
     achievementsScanned: number;
     achievementsAvailable: number;
+    statsGamesScanned: number;
+    statsGamesAvailable: number;
     averageSessionMinutes: number | null;
     longestSessionSeconds: number | null;
     mostPlayedWeekday: string | null;

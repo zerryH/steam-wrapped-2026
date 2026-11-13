@@ -348,7 +348,7 @@ export default function App() {
       <section className="footnote-section">
         <div className="footnote-mark">*</div><div><span className="section-kicker">HOW TO READ THIS RECAP</span>
           <p><strong>Measured hours</strong> are summed from local Steam app start/exit records that could be paired. A missing, rotated, deleted or reinstalled Steam log can leave gaps. <strong>Achievements</strong> use Steam's individual unlock timestamps and are a separate activity signal, not a playtime estimate. Steam's lifetime counter is shown only as lifetime context.</p>
-          <small>{fmt(data.history.sessionLogFiles.length)} Steam log files detected · {fmt(data.history.achievementGamesScanned)} of {fmt(data.games.length)} games scanned for achievement history</small>
+          <small>{fmt(data.history.sessionLogFiles.length)} Steam log files detected · {fmt(data.history.achievementGamesScanned)} of {fmt(data.games.length)} games scanned for achievement history · Steam player counters available for {fmt(data.summary.statsGamesAvailable)} of {fmt(data.summary.statsGamesScanned)} scanned games</small>
         </div>
       </section>
     </>}

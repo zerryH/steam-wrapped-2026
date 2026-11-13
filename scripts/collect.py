@@ -417,8 +417,8 @@ def main() -> int:
     load_dotenv(ROOT / ".env")
     parser = argparse.ArgumentParser(description="Generate a historical, year-to-date Steam Wrapped.")
     parser.add_argument("--year", type=int, default=int(os.getenv("WRAPPED_YEAR", "2026")))
-    parser.add_argument("--deep-limit", type=int, default=int(os.getenv("DEEP_STATS_LIMIT", "40")),
-                        help="Fetch Steam player stats for the top N lifetime games; 0 disables it.")
+    parser.add_argument("--deep-limit", type=int, default=int(os.getenv("DEEP_STATS_LIMIT", "-1")),
+                        help="Fetch Steam player stats for the top N lifetime games; -1 scans all games and 0 disables it.")
     parser.add_argument("--achievement-limit", type=int, default=int(os.getenv("ACHIEVEMENT_SCAN_LIMIT", "-1")),
                         help="Scan unlock-time history for the top N lifetime games; -1 scans all games.")
     parser.add_argument("--log-dir", default=os.getenv("STEAM_LOG_DIR", ""),
@@ -468,6 +468,8 @@ def main() -> int:
         games: list[dict[str, Any]] = []
         all_achievement_events: list[dict[str, Any]] = []
         scanned_achievements = 0
+        scanned_player_stats = 0
+        games_with_player_stats = 0
         for index, raw in enumerate(raw_games):
             app_id = int(raw.get("appid", 0) or 0)
             name = str(raw.get("name") or f"Steam app {app_id}")
@@ -515,10 +517,14 @@ def main() -> int:
                 scanned_achievements += 1
                 time.sleep(0.15)
 
-            if args.deep_limit > 0 and index < args.deep_limit:
+            scan_player_stats = args.deep_limit == -1 or (args.deep_limit > 0 and index < args.deep_limit)
+            if scan_player_stats:
                 stats, available = fetch_player_stats(app_id, steam_id, key)
                 game["stats"] = stats
                 game["statsAvailable"] = available
+                scanned_player_stats += 1
+                if available:
+                    games_with_player_stats += 1
                 time.sleep(0.15)
 
             games.append(game)
@@ -588,6 +594,8 @@ def main() -> int:
                 "achievementUnlocked2026": len(all_achievement_events),
                 "achievementsScanned": achievement_unlocked_total,
                 "achievementsAvailable": achievement_total,
+                "statsGamesScanned": scanned_player_stats,
+                "statsGamesAvailable": games_with_player_stats,
                 "averageSessionMinutes": activity["averageSessionMinutes"],
                 "longestSessionSeconds": activity["longestSessionSeconds"] or None,
                 "mostPlayedWeekday": activity["mostPlayedWeekday"],
@@ -624,6 +632,7 @@ def main() -> int:
         print(f"Paired local Steam sessions in {year}: {activity['totalSessions']}")
         print(f"Measured session time: {activity['totalHours']:.2f} hours" if activity["totalSessions"] else "No complete local Steam sessions found; 2026 hours will be shown as unavailable.")
         print(f"2026 achievement unlocks found: {len(all_achievement_events)} across {scanned_achievements} scanned games.")
+        print(f"Steam player stats available for {games_with_player_stats} of {scanned_player_stats} scanned games.")
         if log_files:
             print(f"Read {len(log_files)} local Steam log files.")
         else:

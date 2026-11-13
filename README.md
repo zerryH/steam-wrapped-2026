@@ -94,7 +94,7 @@ Steam's `GetOwnedGames` exposes cumulative lifetime playtime and a rolling two-w
 - `STEAM_API_KEY`
 - `STEAM_ID`
 - `WRAPPED_YEAR` (defaults to 2026)
-- `DEEP_STATS_LIMIT` (default 40)
+- `DEEP_STATS_LIMIT` (default -1; scan all games for Steam-native player counters. Set 0 to disable or a positive number to limit to the top N.)
 - `ACHIEVEMENT_SCAN_LIMIT` (default -1; scans every detected game. Set a positive number to limit the scan.)
 - `STEAM_LOG_DIR` (optional custom Steam logs folder)
 - `THUNDERSKILL_NICKNAME` (optional public tracker profile)
